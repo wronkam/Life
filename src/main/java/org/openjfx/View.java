@@ -11,6 +11,7 @@ public class View extends VBox {
     private Canvas canvas;
     private float dx;
     private float dy;
+    public Board board;
     class Toolbar extends ToolBar{
         private Button step;
         private Button pause;
@@ -18,6 +19,10 @@ public class View extends VBox {
         private Button load;
         public Toolbar(){
             this.step=new Button("step");
+            this.step.setOnAction(actionEvent -> {
+                board.step();
+                draw();
+            });
             this.pause=new Button("pause");
             this.save=new Button("save");
             this.load=new Button("load");
@@ -28,7 +33,12 @@ public class View extends VBox {
     public View(){
         this.canvas=new Canvas(Constants.width,Constants.height);
         Toolbar toolbar=new Toolbar();
-
+        this.board=new Board();
+        this.board.set(2,2,1);
+        this.board.set(2,3,1);
+        this.board.set(3,3,1);
+        this.board.set(4,3,1);
+        this.board.set(3,4,1);
 
         this.dx=Constants.width/Constants.cols;
         this.dy=Constants.height/Constants.rows;
@@ -43,10 +53,7 @@ public class View extends VBox {
 
         for(int x=0;x<Constants.cols;++x){
             for(int y=0;y<Constants.rows;++y){
-               if((x+y)%2==0 && x%3==0 && y%5==0) {
-                   System.out.println(x);
-                   System.out.println(y);
-                   System.out.println("--------------");
+               if(this.board.getState(x,y)==1) {
                    c.fillRect(x*dx,y*dy,dx,dy);
                }
             }
@@ -60,6 +67,5 @@ public class View extends VBox {
         for(int y=0;y<=Constants.rows;++y){
             c.strokeLine(0,y*dy,Constants.width,y*dy);
         }
-
     }
 }

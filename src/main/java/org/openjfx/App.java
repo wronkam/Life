@@ -6,6 +6,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
+import static java.lang.Thread.sleep;
+
 
 /**
  * JavaFX App
@@ -19,7 +21,6 @@ public class App extends Application {
         stage.setScene(scene);
         stage.show();
         stage.setTitle("Life");
-
         view.draw();
     }
 
