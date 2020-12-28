@@ -14,10 +14,13 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) {
-        Label label = new Label("Hello, JavaFX ");
-        Scene scene = new Scene(new StackPane(label), 1900, 1080);
+        View view=new View();
+        Scene scene=new Scene(view,Constants.width,Constants.height);
         stage.setScene(scene);
         stage.show();
+        stage.setTitle("Life");
+
+        view.draw();
     }
 
     public static void main(String[] args) {
