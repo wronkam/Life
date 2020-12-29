@@ -11,7 +11,21 @@ public class Board {
     }
     private int x;
     private int y;
+    int getX(){
+        return x;
+    }
+    int getY(){
+        return y;
+    }
     cell tab[][];
+    Board(int cols, int rows){
+        this.x=cols;
+        this.y=rows;
+        tab=new cell[this.x][this.y];
+        for (int i=0;i<this.x;++i)
+            for (int j=0;j<this.y;++j)
+                tab[i][j]=new cell();
+    }
     Board(){
         this.x=Constants.cols;
         this.y=Constants.rows;
@@ -21,6 +35,12 @@ public class Board {
                 tab[i][j]=new cell();
     }
     void set(int x,int y,int st){
+        if(0<=x && x<this.x && 0<=y && y<this.y) {
+            tab[x][y].state = (short) st;
+            tab[x][y].tmp=(short) 0;
+        }
+    }
+    void preset(int x,int y,int st){
         if(0<=x && x<this.x && 0<=y && y<this.y)
             tab[x][y].tmp=(short) st;
     }
@@ -51,8 +71,13 @@ public class Board {
                 +getState(x,y+1)
                 +getState(x+1,y+1);
         if(count==3 || (getState(x,y)==1 && count==2)){
-            set(x,y,1);
+            preset(x,y,1);
         }
+    }
+    void clear(){
+        for(int i=0;i<this.x;++i)
+            for(int j=0;j<this.y;++j)
+                set(i,j,0);
     }
     Board step(){
         this.prepare();
