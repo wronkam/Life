@@ -10,7 +10,7 @@ public class Loop {
     private View view;
     public Loop(View view){
         this.view=view;
-        this.timeline=new Timeline(new KeyFrame(Duration.millis(100),this::doStep));
+        this.timeline=new Timeline(new KeyFrame(Duration.millis(Constants.initialDelay),this::doStep));
         this.timeline.setCycleCount(Timeline.INDEFINITE);
     }
 
