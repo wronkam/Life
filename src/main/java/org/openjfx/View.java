@@ -13,44 +13,41 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
+import java.io.*;
 import java.util.Random;
 
 import static java.lang.Long.max;
 import static java.lang.Long.min;
 
 public class View extends VBox {
-    private Canvas canvas;
+    private final Canvas canvas;
     private float dx;
     private float dy;
+    private boolean specialLabel;
     public Board board;
     private boolean simMode;
-    private Loop mainLoop;
-    private Toolbar toolbar;
+    private final Loop mainLoop;
+    private final Toolbar toolbar;
 
     class Toolbar extends ToolBar {
-        private TextInputDialog resetOptions;
-        private Button step;
-        private Button pause;
-        private Button randomize;
-        private Button save;
-        private Button load;
-        private Button reset;
-        private Button clear;
-        private Label state;
-        private Random random;
+        private final TextInputDialog inputDialog;
+        private final Button pause;
+        private final Label state;
+        private final Random random;
 
         public Toolbar() {
+            this.state = new Label("editing");
             this.random = new Random();
-            this.step = new Button("step");
-            this.step.setOnAction(actionEvent -> {
+            Button step = new Button("step (ctrl)");
+            step.setOnAction(actionEvent -> {
                 setMode(false);
                 board.step();
                 draw();
             });
-            this.pause = new Button("play");
+            this.pause = new Button("play (A)");
             this.pause.setOnAction(actionEvent -> setMode(!simMode));
-            this.randomize = new Button("random");
-            this.randomize.setOnAction(actionEvent -> {
+            Button randomize = new Button("random");
+            randomize.setOnAction(actionEvent -> {
                 setMode(false);
                 int rx = board.getX(), ry = board.getY();
                 for (int i = 0; i < rx; ++i)
@@ -58,53 +55,112 @@ public class View extends VBox {
                         board.set(i, j, random.nextInt() % 2);
                 draw();
             });
-            this.save = new Button("save");
-            this.load = new Button("load");
-            this.clear = new Button("clear");
-            this.clear.setOnAction(actionEvent -> {
+            this.inputDialog = new TextInputDialog();
+            Button save = new Button("save");
+            save.setOnAction(actionEvent -> {
+                setMode(false);
+                inputDialog.setTitle("Save");
+                inputDialog.setHeaderText("File name:");
+                inputDialog.showAndWait();
+                String name=inputDialog.getEditor().getText();
+                name=name.replaceAll("[^A-Za-z0-9]","");
+                specialLabel=true;
+                this.state.setText("Saving to: "+name);
+                try {
+                    FileOutputStream saveFile=new FileOutputStream(name);
+                    System.out.println(board.getX()+" "+board.getY());
+                    saveFile.write(board.getX()/256);
+                    saveFile.write(board.getX());
+                    saveFile.write(board.getY()/256);
+                    saveFile.write(board.getY());
+                    for(int i=0;i<board.getX();++i)
+                        for(int j=0;j<board.getY();++j)
+                            saveFile.write(board.getState(i,j));
+                    saveFile.close();
+                } catch (Exception e) {
+                    state.setText("An error Occurred");
+                    e.printStackTrace();
+                }
+                inputDialog.getEditor().clear();
+            });
+            Button load = new Button("load");
+            load.setOnAction(actionEvent -> {
+                setMode(false);
+                inputDialog.setTitle("Load");
+                inputDialog.setHeaderText("File name:");
+                inputDialog.showAndWait();
+                String name=inputDialog.getEditor().getText();
+                name=name.replaceAll("[^A-Za-z0-9]","");
+                specialLabel=true;
+                this.state.setText("Reading from: "+name);
+                inputDialog.getEditor().clear();
+                try {
+                    FileInputStream loadFile=new FileInputStream(name);
+                    int tmpX=loadFile.read();
+                    tmpX=tmpX*256+loadFile.read();
+                    int tmpY=loadFile.read();
+                    tmpY=tmpY*256+loadFile.read();
+                    Board tmpB=new Board(tmpX,tmpY);
+                    System.out.println(tmpX+" "+tmpY);
+                    for(int i=0;i<tmpX;++i) {
+                        for (int j = 0; j < tmpY; ++j) {
+                            tmpB.set(i,j,loadFile.read());
+                        }
+                    }
+                    loadFile.close();
+                    board=tmpB;
+                    dx = Constants.width /(float) board.getX();
+                    dy = Constants.height /(float) board.getY();
+                    draw();
+                } catch (Exception e) {
+                    state.setText("An error Occurred");
+                    e.printStackTrace();
+                }
+            });
+            Button clear = new Button("clear");
+            clear.setOnAction(actionEvent -> {
                 setMode(false);
                 board.clear();
                 draw();
             });
-            this.reset = new Button("reset");
-            this.resetOptions = new TextInputDialog();
-            this.reset.setOnAction(actionEvent -> {
+            Button reset = new Button("reset");
+            reset.setOnAction(actionEvent -> {
                 setMode(false);
-                resetOptions.showAndWait();
+                inputDialog.setTitle("Reset");
+                inputDialog.setHeaderText("New cell size (default=" + Constants.cellSize + ')');
+                inputDialog.showAndWait();
                 long newCellSize = -1;
                 try {
-                    newCellSize = Long.parseLong(resetOptions.getEditor().getText());
+                    newCellSize = Long.parseLong(inputDialog.getEditor().getText());
                 } catch (Exception e) {
-                    System.out.println("Can't parse " + resetOptions.getEditor().getText());
+                    System.out.println("Can't parse " + inputDialog.getEditor().getText());
                 } finally {
-                    resetOptions.getEditor().clear();
+                    inputDialog.getEditor().clear();
                 }
                 if (newCellSize >= 0) {
                     newCellSize=min(max(5,newCellSize),max(Constants.width,Constants.height));
                     board = new Board((int) max(Constants.width / newCellSize, 1), (int) max(Constants.height / newCellSize, 1));
-                    dx = Constants.width / board.getX();
-                    dy = Constants.height / board.getY();
+                    dx = Constants.width /(float) board.getX();
+                    dy = Constants.height /(float) board.getY();
                 }
                 draw();
             });
-            resetOptions.setTitle("Reset");
-            resetOptions.setHeaderText("New cell size (default=" + Constants.cellSize + ')');
-            this.state = new Label("editing");
-            this.getItems().addAll( this.pause,this.step, this.clear, this.randomize, this.reset, this.save, this.load, this.state);
+            this.getItems().addAll( this.pause, step, clear, randomize, reset, save, load, this.state);
 
         }
     }
 
     public View() {
         this.simMode = false;
+        this.specialLabel=false;
         this.canvas = new Canvas(Constants.width, Constants.height);
         this.canvas.setOnMouseClicked(this::drawHandler);
         this.canvas.setOnMouseDragged(this::drawHandler);
 
         toolbar = new Toolbar();
         this.board = new Board();
-        this.dx = Constants.width / board.getX();
-        this.dy = Constants.height / board.getY();
+        this.dx = Constants.width /(float) board.getX();
+        this.dy = Constants.height /(float) board.getY();
 
         this.setOnKeyPressed(this::keyHandler);
 
@@ -178,13 +234,18 @@ public class View extends VBox {
             simMode = st;
             if (simMode) {
                 this.toolbar.state.setText("simulating");
-                this.toolbar.pause.setText("pause");
+                this.toolbar.pause.setText("pause (A)");
                 this.mainLoop.start();
             } else {
                 this.toolbar.state.setText("editing");
-                this.toolbar.pause.setText("play");
+                this.toolbar.pause.setText("play (A)");
                 this.mainLoop.stop();
             }
-        }
+            specialLabel = false;
+        }else if(specialLabel)
+            if(simMode)
+                this.toolbar.state.setText("simulating");
+            else
+                this.toolbar.state.setText("editing");
     }
 }

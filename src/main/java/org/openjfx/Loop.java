@@ -6,8 +6,8 @@ import javafx.event.ActionEvent;
 import javafx.util.Duration;
 
 public class Loop {
-    private Timeline timeline;
-    private View view;
+    private final Timeline timeline;
+    private final View view;
     public Loop(View view){
         this.view=view;
         this.timeline=new Timeline(new KeyFrame(Duration.millis(Constants.initialDelay),this::doStep));
