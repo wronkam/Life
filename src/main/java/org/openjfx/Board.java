@@ -1,7 +1,16 @@
 package org.openjfx;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static java.lang.Integer.min;
+
 public class Board {
+
     private static class cell {
         short tmp=0;
         short state=0;
@@ -10,6 +19,7 @@ public class Board {
             this.tmp=0;
         }
     }
+
     private final int x;
     private final int y;
     int getX(){
@@ -19,21 +29,41 @@ public class Board {
         return y;
     }
     cell[][] tab;
+    ExecutorService executorService;
+    Collection<Callable<Void>> prepareAll;
+    Collection<Callable<Void>> updateAll;
     Board(int cols, int rows){
         this.x=cols;
         this.y=rows;
         tab=new cell[this.x][this.y];
+        executorService= Executors.newFixedThreadPool(Constants.threads);
+        prepareAll=new ArrayList<>();
+        updateAll=new ArrayList<>();
         for (int i=0;i<this.x;++i)
             for (int j=0;j<this.y;++j)
                 tab[i][j]= new cell();
+        int assignment = this.x / Constants.threads + 1;
+        for(int i=0;i<this.x;i+= assignment){
+            int x1= i;
+            int x2=min(i+ assignment,this.x);
+            prepareAll.add(()->prepare(x1,x2,y));
+            updateAll.add(()->update(x1,x2,y));
+        }
     }
     Board(){
-        this.x=Constants.cols;
-        this.y=Constants.rows;
-        tab=new cell[this.x][this.y];
-        for (int i=0;i<this.x;++i)
-            for (int j=0;j<this.y;++j)
-                tab[i][j]= new cell();
+        this(Constants.cols, Constants.rows);
+    }
+    Void prepare(int x1,int x2,int yy){
+        for(int i=x1;i<x2;++i)
+            for(int j=0;j<yy;++j)
+                check(i,j);
+        return null;
+    }
+    Void update(int x1,int x2,int yy){
+        for(int i=x1;i<x2;++i)
+            for(int j=0;j<yy;++j)
+                tab[i][j].update();
+        return null;
     }
     void set(int x,int y,int st){
         if(0<=x && x<this.x && 0<=y && y<this.y) {
@@ -52,14 +82,20 @@ public class Board {
             return 0;
     }
     void prepare(){
-        for(int i=0;i<this.x;++i)
-            for(int j=0;j<this.y;++j)
-                check(i,j);
+        try {
+            executorService.invokeAll(prepareAll);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executorService.shutdownNow();
+        }
     }
     void update(){
-        for(int i=0;i<this.x;++i)
-            for(int j=0;j<this.y;++j)
-                tab[i][j].update();
+        try {
+            executorService.invokeAll(updateAll);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executorService.shutdownNow();
+        }
     }
     void check(int x,int y){
         int count=0;
