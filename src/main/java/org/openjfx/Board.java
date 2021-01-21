@@ -51,7 +51,7 @@ public class Board {
         }
     }
     Board(){
-        this(Constants.cols, Constants.rows);
+        this(Constants.width/Constants.cellSize, Constants.height/Constants.cellSize);
     }
     Void prepare(int x1,int x2,int yy){
         for(int i=x1;i<x2;++i)

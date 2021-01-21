@@ -36,6 +36,50 @@ public class View extends VBox {
         private final Random random;
 
         public Toolbar() {
+            this.inputDialog = new TextInputDialog();
+            inputDialog.setTitle("Resolution");
+            {//get resolution
+                inputDialog.setTitle("Resolution");
+                inputDialog.setHeaderText("Input screen width");
+                inputDialog.showAndWait();
+                boolean ok=false;
+                do{
+                    int wid;
+                    try {
+                        wid = Integer.parseUnsignedInt(inputDialog.getEditor().getText());
+                        if(wid>Constants.cellSize) {
+                            Constants.width=wid;
+                            ok=true;
+                            inputDialog.getEditor().clear();
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Can't parse " + inputDialog.getEditor().getText()+" as unsigned int");
+                        inputDialog.getEditor().clear();
+                        inputDialog.setTitle("Couldn't parse, try again:");
+                        inputDialog.showAndWait();
+                    }
+                }while (!ok);
+                inputDialog.setTitle("Resolution");
+                inputDialog.setHeaderText("Input screen height");
+                inputDialog.showAndWait();
+                ok=false;
+                do{
+                    int hig;
+                    try {
+                        hig = Integer.parseUnsignedInt(inputDialog.getEditor().getText());
+                        if(hig>Constants.cellSize) {
+                            Constants.height=hig;
+                            ok=true;
+                            inputDialog.getEditor().clear();
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Can't parse " + inputDialog.getEditor().getText()+" as unsigned int");
+                        inputDialog.getEditor().clear();
+                        inputDialog.setTitle("Couldn't parse, try again:");
+                        inputDialog.showAndWait();
+                    }
+                }while (!ok);
+            }
             this.state = new Label("editing");
             this.random = new Random();
             Button step = new Button("step (ctrl)");
@@ -55,7 +99,6 @@ public class View extends VBox {
                         board.set(i, j, random.nextInt() % 2);
                 draw();
             });
-            this.inputDialog = new TextInputDialog();
             Button save = new Button("save");
             save.setOnAction(actionEvent -> {
                 setMode(false);
@@ -153,18 +196,21 @@ public class View extends VBox {
     public View() {
         this.simMode = false;
         this.specialLabel=false;
+        toolbar = new Toolbar();
         this.canvas = new Canvas(Constants.width, Constants.height);
+        //TO DO:
+        //add dialog window here to set constants with, height
+        this.getChildren().addAll(this.canvas, toolbar);
+        this.board = new Board();
+
         this.canvas.setOnMouseClicked(this::drawHandler);
         this.canvas.setOnMouseDragged(this::drawHandler);
 
-        toolbar = new Toolbar();
-        this.board = new Board();
         this.dx = Constants.width /(float) board.getX();
         this.dy = Constants.height /(float) board.getY();
 
         this.setOnKeyPressed(this::keyHandler);
 
-        this.getChildren().addAll(this.canvas, toolbar);
 
         this.mainLoop = new Loop(this);
     }
