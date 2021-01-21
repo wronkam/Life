@@ -15,6 +15,7 @@ import javafx.scene.paint.Color;
 
 import java.io.*;
 import java.util.Random;
+import java.util.concurrent.Executors;
 
 import static java.lang.Long.max;
 import static java.lang.Long.min;
@@ -40,17 +41,19 @@ public class View extends VBox {
             inputDialog.setTitle("Resolution");
             {//get resolution
                 inputDialog.setTitle("Resolution");
-                inputDialog.setHeaderText("Input screen width");
+                inputDialog.setHeaderText("Input screen width (min 30)");
                 inputDialog.showAndWait();
                 boolean ok=false;
                 do{
                     int wid;
                     try {
                         wid = Integer.parseUnsignedInt(inputDialog.getEditor().getText());
-                        if(wid>Constants.cellSize) {
+                        if(wid>=Constants.cellSize) {
                             Constants.width=wid;
                             ok=true;
                             inputDialog.getEditor().clear();
+                        }else {
+                            throw new IndexOutOfBoundsException("Not enough");
                         }
                     } catch (Exception e) {
                         System.out.println("Can't parse " + inputDialog.getEditor().getText()+" as unsigned int");
@@ -60,17 +63,19 @@ public class View extends VBox {
                     }
                 }while (!ok);
                 inputDialog.setTitle("Resolution");
-                inputDialog.setHeaderText("Input screen height");
+                inputDialog.setHeaderText("Input screen height (min 68)");
                 inputDialog.showAndWait();
                 ok=false;
                 do{
                     int hig;
                     try {
                         hig = Integer.parseUnsignedInt(inputDialog.getEditor().getText());
-                        if(hig>Constants.cellSize) {
-                            Constants.height=hig;
+                        if(hig>=Constants.cellSize+Constants.toolBarHeight) {
+                            Constants.height=hig-Constants.toolBarHeight;
                             ok=true;
                             inputDialog.getEditor().clear();
+                        }else {
+                            throw new IndexOutOfBoundsException("Not enough");
                         }
                     } catch (Exception e) {
                         System.out.println("Can't parse " + inputDialog.getEditor().getText()+" as unsigned int");

@@ -14,7 +14,7 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         View view=new View();
-        Scene scene=new Scene(view,Constants.width,Constants.height+38);
+        Scene scene=new Scene(view,Constants.width,Constants.height+Constants.toolBarHeight);
         stage.setScene(scene);
         stage.show();
         stage.setTitle("Life");
@@ -23,6 +23,7 @@ public class App extends Application {
 
     public static void main(String[] args) {
         launch();
+        return;
     }
 
 }
