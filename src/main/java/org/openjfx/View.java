@@ -99,9 +99,11 @@ public class View extends VBox {
             randomize.setOnAction(actionEvent -> {
                 setMode(false);
                 int rx = board.getX(), ry = board.getY();
-                for (int i = 0; i < rx; ++i)
-                    for (int j = 0; j < ry; ++j)
-                        board.set(i, j, random.nextInt() % 2);
+                for (int i = 0; i < rx; ++i) {
+                    for (int j = 0; j < ry; ++j) {
+                        board.set(i, j, ((random.nextInt() )% 2+2)%2); //to avoid negative values
+                    }
+                }
                 draw();
             });
             Button save = new Button("save");
@@ -298,5 +300,8 @@ public class View extends VBox {
                 this.toolbar.state.setText("simulating");
             else
                 this.toolbar.state.setText("editing");
+    }
+    public void stop(){
+        board.stop();
     }
 }

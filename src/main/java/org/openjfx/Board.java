@@ -32,6 +32,9 @@ public class Board {
     ExecutorService executorService;
     Collection<Callable<Void>> prepareAll;
     Collection<Callable<Void>> updateAll;
+    public void stop(){
+        executorService.shutdownNow();
+    }
     Board(int cols, int rows){
         this.x=cols;
         this.y=rows;
