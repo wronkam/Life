@@ -3,6 +3,7 @@ package org.openjfx;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -123,4 +124,13 @@ public class Board {
         this.prepare();
         this.update();
     }
+    void random(){
+        Random random=new Random();
+        for (int i = 0; i < x; ++i) {
+            for (int j = 0; j < y; ++j) {
+                set(i, j, (random.nextInt(2)%2)); //to avoid negative values
+            }
+        }
+    }
+
 }

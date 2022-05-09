@@ -34,7 +34,6 @@ public class View extends VBox {
         private final TextInputDialog inputDialog;
         private final Button pause;
         private final Label state;
-        private final Random random;
 
         public Toolbar() {
             this.inputDialog = new TextInputDialog();
@@ -86,27 +85,21 @@ public class View extends VBox {
                 }while (!ok);
             }
             this.state = new Label("editing");
-            this.random = new Random();
-            Button step = new Button("step (ctrl)");
+            Button step = new Button("Step (ctrl)");
             step.setOnAction(actionEvent -> {
                 setMode(false);
                 board.step();
                 draw();
             });
-            this.pause = new Button("play (A)");
+            this.pause = new Button("Play (a)");
             this.pause.setOnAction(actionEvent -> setMode(!simMode));
-            Button randomize = new Button("random");
+            Button randomize = new Button("Random (r)");
             randomize.setOnAction(actionEvent -> {
                 setMode(false);
-                int rx = board.getX(), ry = board.getY();
-                for (int i = 0; i < rx; ++i) {
-                    for (int j = 0; j < ry; ++j) {
-                        board.set(i, j, ((random.nextInt() )% 2+2)%2); //to avoid negative values
-                    }
-                }
+                board.random();
                 draw();
             });
-            Button save = new Button("save");
+            Button save = new Button("Save");
             save.setOnAction(actionEvent -> {
                 setMode(false);
                 inputDialog.setTitle("Save");
@@ -133,7 +126,7 @@ public class View extends VBox {
                 }
                 inputDialog.getEditor().clear();
             });
-            Button load = new Button("load");
+            Button load = new Button("Load");
             load.setOnAction(actionEvent -> {
                 setMode(false);
                 inputDialog.setTitle("Load");
@@ -167,13 +160,13 @@ public class View extends VBox {
                     e.printStackTrace();
                 }
             });
-            Button clear = new Button("clear");
+            Button clear = new Button("Clear");
             clear.setOnAction(actionEvent -> {
                 setMode(false);
                 board.clear();
                 draw();
             });
-            Button reset = new Button("reset");
+            Button reset = new Button("Reset");
             reset.setOnAction(actionEvent -> {
                 setMode(false);
                 inputDialog.setTitle("Reset");
@@ -229,6 +222,10 @@ public class View extends VBox {
             draw();
         }else if(keyEvent.getCode() == KeyCode.A){
             this.setMode(!simMode);
+        }else if(keyEvent.getCode() == KeyCode.R){
+            setMode(false);
+            board.random();
+            draw();
         }
     }
 
