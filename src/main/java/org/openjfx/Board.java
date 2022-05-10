@@ -220,15 +220,15 @@ public class Board {
         }
     }
 
-    double getFill(){
-        double count=0;
-        for (int i = 1; i < x-1; ++i) {
-            for (int j = 1; j < y-1; ++j) {
-                if(getState(x,y)!=0)
+    int getFill(){
+        int count=0;
+        for (int i =0; i < x; ++i) {
+            for (int j = 0; j < y; ++j) {
+                if(getState(i,j)!=0)
                     count+=1;
             }
         }
-        return count/(x*y);
+        return (int) Math.round((double) count/(double)(x*y)*100);
     }
     void heuristic(){
         for (int i = 0; i < x; ++i) {

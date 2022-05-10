@@ -36,9 +36,11 @@ public class View extends VBox {
         private final Button pause;
         private final Label state;
         private final Label rand;
+        private final Label filling;
 
         public Toolbar() {
-            this.rand = new Label("Randomness:"+randomness+"%");
+            this.rand = new Label(randomness+"%");
+            this.filling = new Label("Filled:0%");
             this.inputDialog = new TextInputDialog();
             inputDialog.setTitle("Resolution");
             {//get resolution
@@ -203,7 +205,7 @@ public class View extends VBox {
                 }
                 draw();
             });
-            this.getItems().addAll( this.pause, step,heuristic,fill, clear, randomize,this.rand, reset, save, load, this.state);
+            this.getItems().addAll( this.pause, step,heuristic,fill,this.filling, clear, randomize,this.rand, reset, save, load, this.state);
 
         }
     }
@@ -248,12 +250,12 @@ public class View extends VBox {
             draw();
         }else if(keyEvent.getCode() == KeyCode.X){
             setMode(false);
-            randomness=Math.min(randomness+5,100);
-            this.toolbar.rand.setText("Randomness:"+randomness+"%");
+            randomness=Math.min(randomness+1,100);
+            this.toolbar.rand.setText(randomness+"%");
         }else if(keyEvent.getCode() == KeyCode.Z){
             setMode(false);
-            randomness=Math.max(randomness-5,0);
-            this.toolbar.rand.setText("Randomness:"+randomness+"%");
+            randomness=Math.max(randomness-1,0);
+            this.toolbar.rand.setText(randomness+"%");
         }else if(keyEvent.getCode() == KeyCode.F){
             setMode(false);
             board.dfs();
@@ -309,6 +311,7 @@ public class View extends VBox {
         for (int y = 0; y <= this.board.getY(); ++y) {
             c.strokeLine(0, y * dy, Constants.width, y * dy);
         }
+        this.toolbar.filling.setText("Filled:"+board.getFill()+"%");
     }
 
     private void setMode(boolean st) {
