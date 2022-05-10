@@ -90,6 +90,9 @@ public class Board {
         if(0<=x && x<this.x && 0<=y && y<this.y)
             tab[x][y].state=val;
     }
+    boolean isCell(int x,int y){
+        return (0<=x && x<this.x && 0<=y && y<this.y);
+    }
     void presetTMP(int x,int y,short val){
         if(0<=x && x<this.x && 0<=y && y<this.y)
             tab[x][y].tmp=val;
@@ -183,10 +186,14 @@ public class Board {
         }
         if(getState(x,y)==3){
             if(count>2){
-                preset(x,y, (short) 1);
+                set(x,y, (short) 1);
             }else {
-                preset(x,y, (short) 0);
+                set(x,y, (short) 0);
             }
+        }else if(getState(x,y)==1){
+            set(x,y,1);
+        }else {
+            set(x,y,0);
         }
     }
     void clear(){
@@ -248,6 +255,38 @@ public class Board {
             presetTMP(x, y, (short) 0);
         }else if(getState(x,y)==1){
             presetTMP(x, y, (short) 1);
+        }
+    }
+    protected void dfs(){
+        Boolean visited[][]= new Boolean[x][y];
+        for (int i = 0; i < x; ++i) {
+            for (int j = 0; j < y; ++j) {
+                visited[i][j]=false;
+            }
+        }
+        dfs(0,0,visited); //margin around board is always free
+        for (int i = 0; i < x; ++i) {
+            for (int j = 0; j < y; ++j) {
+                if(!visited[i][j] && getState(i,j)==0)
+                    set(i,j,1);
+            }
+        }
+    }
+
+    private void dfs(int x, int y,Boolean[][] vis) {
+        int s[]={-1,1};
+        if(isCell(x,y)) {
+            vis[x][y]=true;
+            for(int k:s){
+                if(isCell(x+k,y) && getState(x+k,y)==0){
+                    if(!vis[x+k][y])
+                        dfs(x+k,y,vis);
+                }
+                if(isCell(x,y+k) && getState(x,y+k)==0){
+                    if(!vis[x][y+k])
+                        dfs(x,y+k,vis);
+                }
+            }
         }
     }
 

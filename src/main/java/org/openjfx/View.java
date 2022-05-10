@@ -108,6 +108,12 @@ public class View extends VBox {
                 board.heuristic();
                 draw();
             });
+            Button fill = new Button("Fill (f)");
+            heuristic.setOnAction(actionEvent -> {
+                setMode(false);
+                board.dfs();
+                draw();
+            });
             Button save = new Button("Save");
             save.setOnAction(actionEvent -> {
                 setMode(false);
@@ -197,7 +203,7 @@ public class View extends VBox {
                 }
                 draw();
             });
-            this.getItems().addAll( this.pause, step,heuristic, clear, randomize,this.rand, reset, save, load, this.state);
+            this.getItems().addAll( this.pause, step,heuristic,fill, clear, randomize,this.rand, reset, save, load, this.state);
 
         }
     }
@@ -248,6 +254,10 @@ public class View extends VBox {
             setMode(false);
             randomness=Math.max(randomness-5,0);
             this.toolbar.rand.setText("Randomness:"+randomness+"%");
+        }else if(keyEvent.getCode() == KeyCode.F){
+            setMode(false);
+            board.dfs();
+            draw();
         }
     }
 
