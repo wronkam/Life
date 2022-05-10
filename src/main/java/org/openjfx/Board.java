@@ -32,6 +32,7 @@ public class Board {
     cell[][] tab;
     ExecutorService executorService;
     Collection<Callable<Void>> prepareAll;
+    Collection<Callable<Void>> prepare2All;
     Collection<Callable<Void>> updateAll;
     public void stop(){
         executorService.shutdownNow();
@@ -42,6 +43,7 @@ public class Board {
         tab=new cell[this.x][this.y];
         executorService= Executors.newFixedThreadPool(Constants.threads);
         prepareAll=new ArrayList<>();
+        prepare2All=new ArrayList<>();
         updateAll=new ArrayList<>();
         for (int i=0;i<this.x;++i)
             for (int j=0;j<this.y;++j)
@@ -51,9 +53,12 @@ public class Board {
             int x1= i;
             int x2=min(i+ assignment,this.x);
             prepareAll.add(()->prepare(x1,x2,y));
+            prepare2All.add(()->prepare2(x1,x2,y));
             updateAll.add(()->update(x1,x2,y));
         }
     }
+
+
     Board(){
         this(Constants.width/Constants.cellSize, Constants.height/Constants.cellSize);
     }
@@ -63,10 +68,16 @@ public class Board {
                 check(i,j);
         return null;
     }
+    Void prepare2(int x1,int x2,int yy){
+        for(int i=x1;i<x2;++i)
+            for(int j=0;j<yy;++j)
+                check2(i,j);
+        return null;
+    }
     Void update(int x1,int x2,int yy){
         for(int i=x1;i<x2;++i)
             for(int j=0;j<yy;++j)
-                tab[i][j].update();
+                update(i,j);
         return null;
     }
     void set(int x,int y,int st){
@@ -75,9 +86,13 @@ public class Board {
             tab[x][y].tmp=(short) 0;
         }
     }
-    void preset(int x,int y){
+    void preset(int x,int y,short val){
         if(0<=x && x<this.x && 0<=y && y<this.y)
-            tab[x][y].tmp=1;
+            tab[x][y].state=val;
+    }
+    void presetTMP(int x,int y,short val){
+        if(0<=x && x<this.x && 0<=y && y<this.y)
+            tab[x][y].tmp=val;
     }
     short getState(int xx,int yy){
         if(0<=xx && xx<this.x && 0<=yy && yy<this.y)
@@ -93,6 +108,14 @@ public class Board {
             executorService.shutdownNow();
         }
     }
+    void prepare2(){
+        try {
+            executorService.invokeAll(prepare2All);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            executorService.shutdownNow();
+        }
+    }
     void update(){
         try {
             executorService.invokeAll(updateAll);
@@ -102,17 +125,68 @@ public class Board {
         }
     }
     void check(int x,int y){
+        /*states
+        0 - inactive
+        1 - active
+        2 - fading
+        3 - emerging
+         */
+        int s[]={-1,1};
         int count=0;
-        count+=  getState(x-1,y-1)
-                +getState(x,y-1)
-                +getState(x+1,y-1)
-                +getState(x-1,y)
-                +getState(x+1,y)
-                +getState(x-1,y+1)
-                +getState(x,y+1)
-                +getState(x+1,y+1);
-        if(count==3 || (getState(x,y)==1 && count==2)){
-            preset(x,y);
+        for(int k:s){
+            if(getState(x+k,y)==1)
+                count+=1;
+            if(getState(x,y+k)==1)
+                count+=1;
+        }
+        if(getState(x,y)==1){
+            if(count<2){
+                preset(x,y, (short) 2);
+            }
+        }else{
+            if(count>=2){
+                preset(x,y, (short) 3);
+            }
+        }
+    }
+    void check2(int x,int y){
+        /*states
+        0 - inactive
+        1 - active
+        2 - fading
+        3 - emerging
+         */
+        int s[]={-1,1};
+        int count=0;
+        for(int k:s){
+            if(getState(x+k,y)==1 || getState(x+k,y)==3 )
+                count+=1;
+            if(getState(x,y+k)==1 || getState(x+k,y+k)==3 )
+                count+=1;
+        }
+        if(getState(x,y)==2){
+            if(count<2){
+                preset(x,y, (short) 0);
+            }else {
+                preset(x,y, (short) 1);
+            }
+        }
+    }
+    void update(int x,int y){
+        int s[]={-1,1};
+        int count=0;
+        for(int k:s){
+            if(getState(x+k,y)==1)
+                count+=1;
+            if(getState(x,y+k)==1)
+                count+=1;
+        }
+        if(getState(x,y)==3){
+            if(count>2){
+                preset(x,y, (short) 1);
+            }else {
+                preset(x,y, (short) 0);
+            }
         }
     }
     void clear(){
@@ -124,12 +198,56 @@ public class Board {
         this.prepare();
         this.update();
     }
-    void random(){
+
+
+    void random(double r){
         Random random=new Random();
+        for (int i = 1; i < x-1; ++i) {
+            for (int j = 1; j < y-1; ++j) {
+                if(random.nextDouble()<=r) {
+                    set(i, j, 1);
+                }else {
+                    set(i, j, 0);
+                }
+            }
+        }
+    }
+
+    double getFill(){
+        double count=0;
+        for (int i = 1; i < x-1; ++i) {
+            for (int j = 1; j < y-1; ++j) {
+                if(getState(x,y)!=0)
+                    count+=1;
+            }
+        }
+        return count/(x*y);
+    }
+    void heuristic(){
         for (int i = 0; i < x; ++i) {
             for (int j = 0; j < y; ++j) {
-                set(i, j, (random.nextInt(2)%2)); //to avoid negative values
+                heuristic(i,j);
             }
+        }
+        for (int i = 0; i < x; ++i) {
+            for (int j = 0; j < y; ++j) {
+                tab[i][j].update();
+            }
+        }
+    }
+
+    private void heuristic(int x, int y) {
+        int count=
+                getState(x,y-1)*getState(x-1,y)
+                +getState(x,y-1)*getState(x+1,y)
+                +getState(x,y+1)*getState(x-1,y)
+                +getState(x,y+1)*getState(x+1,y)
+                +getState(x+1,y)*getState(x-1,y)
+                +getState(x,y-1)*getState(x,y+1);
+        if (count<2) {
+            presetTMP(x, y, (short) 0);
+        }else if(getState(x,y)==1){
+            presetTMP(x, y, (short) 1);
         }
     }
 

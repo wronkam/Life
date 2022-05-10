@@ -29,13 +29,16 @@ public class View extends VBox {
     private boolean simMode;
     private final Loop mainLoop;
     private final Toolbar toolbar;
+    private int randomness=50;
 
     class Toolbar extends ToolBar {
         private final TextInputDialog inputDialog;
         private final Button pause;
         private final Label state;
+        private final Label rand;
 
         public Toolbar() {
+            this.rand = new Label("Randomness:"+randomness+"%");
             this.inputDialog = new TextInputDialog();
             inputDialog.setTitle("Resolution");
             {//get resolution
@@ -96,7 +99,13 @@ public class View extends VBox {
             Button randomize = new Button("Random (r)");
             randomize.setOnAction(actionEvent -> {
                 setMode(false);
-                board.random();
+                board.random(randomness/100f);
+                draw();
+            });
+            Button heuristic = new Button("Heuristic (h)");
+            heuristic.setOnAction(actionEvent -> {
+                setMode(false);
+                board.heuristic();
                 draw();
             });
             Button save = new Button("Save");
@@ -188,7 +197,7 @@ public class View extends VBox {
                 }
                 draw();
             });
-            this.getItems().addAll( this.pause, step, clear, randomize, reset, save, load, this.state);
+            this.getItems().addAll( this.pause, step,heuristic, clear, randomize,this.rand, reset, save, load, this.state);
 
         }
     }
@@ -224,8 +233,21 @@ public class View extends VBox {
             this.setMode(!simMode);
         }else if(keyEvent.getCode() == KeyCode.R){
             setMode(false);
-            board.random();
+            board.random(randomness/100f);
             draw();
+            this.setMode(!simMode);
+        }else if(keyEvent.getCode() == KeyCode.H){
+            setMode(false);
+            board.heuristic();
+            draw();
+        }else if(keyEvent.getCode() == KeyCode.X){
+            setMode(false);
+            randomness=Math.min(randomness+5,100);
+            this.toolbar.rand.setText("Randomness:"+randomness+"%");
+        }else if(keyEvent.getCode() == KeyCode.Z){
+            setMode(false);
+            randomness=Math.max(randomness-5,0);
+            this.toolbar.rand.setText("Randomness:"+randomness+"%");
         }
     }
 
