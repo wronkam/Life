@@ -53,7 +53,6 @@ public class Board {
             int x1= i;
             int x2=min(i+ assignment,this.x);
             prepareAll.add(()->prepare(x1,x2,y));
-            prepare2All.add(()->prepare2(x1,x2,y));
             updateAll.add(()->update(x1,x2,y));
         }
     }
@@ -66,12 +65,6 @@ public class Board {
         for(int i=x1;i<x2;++i)
             for(int j=0;j<yy;++j)
                 check(i,j);
-        return null;
-    }
-    Void prepare2(int x1,int x2,int yy){
-        for(int i=x1;i<x2;++i)
-            for(int j=0;j<yy;++j)
-                check2(i,j);
         return null;
     }
     Void update(int x1,int x2,int yy){
@@ -111,14 +104,6 @@ public class Board {
             executorService.shutdownNow();
         }
     }
-    void prepare2(){
-        try {
-            executorService.invokeAll(prepare2All);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            executorService.shutdownNow();
-        }
-    }
     void update(){
         try {
             executorService.invokeAll(updateAll);
@@ -144,34 +129,12 @@ public class Board {
         }
         if(getState(x,y)==1){
             if(count<2){
-                preset(x,y, (short) 2);
+                preset(x,y, (short) 0);// <- this sets value WHILE some cells still need to read it, it should not work
+                //yet I am grateful it does
             }
         }else{
             if(count>=2){
                 preset(x,y, (short) 3);
-            }
-        }
-    }
-    void check2(int x,int y){
-        /*states
-        0 - inactive
-        1 - active
-        2 - fading
-        3 - emerging
-         */
-        int s[]={-1,1};
-        int count=0;
-        for(int k:s){
-            if(getState(x+k,y)==1 || getState(x+k,y)==3 )
-                count+=1;
-            if(getState(x,y+k)==1 || getState(x+k,y+k)==3 )
-                count+=1;
-        }
-        if(getState(x,y)==2){
-            if(count<2){
-                preset(x,y, (short) 0);
-            }else {
-                preset(x,y, (short) 1);
             }
         }
     }
@@ -244,6 +207,7 @@ public class Board {
     }
 
     private void heuristic(int x, int y) {
+        presetTMP(x, y, getState(x,y));
         int count=
                 getState(x,y-1)*getState(x-1,y)
                 +getState(x,y-1)*getState(x+1,y)
@@ -253,8 +217,6 @@ public class Board {
                 +getState(x,y-1)*getState(x,y+1);
         if (count<2) {
             presetTMP(x, y, (short) 0);
-        }else if(getState(x,y)==1){
-            presetTMP(x, y, (short) 1);
         }
     }
     protected void dfs(){
